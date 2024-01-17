@@ -1,53 +1,45 @@
-// Code.gs
+// Import Chatbot and Google Services modules
+const chatbot = require('chatbot'); 
+const googleServices = require('googleServices');
 
-// Import necessary libraries
-const GeminiAPI = require('gemini-api').default;
-const {
-	google
-} = require('googleapis');
-
-// Set up triggers for event handling
-function createTriggers() {
-	ScriptApp.newTrigger('onMessage')
-	.forChatSpaces()
-	.onMessage(e)
-	.create();
-}
-
-// Handle incoming messages
-function onMessage(e) {
-	const message = e.message.text;
-	const space = e.space.name;
-
-	// Process the message and generate a response
-	const response = processMessage(message);
-
-	// Send the response back to the chat space
-	sendResponse(space, response);
-}
-
-// Process a message and generate a response
+// Process message
 function processMessage(message) {
-	// TODO: Add your message processing and response generation logic here
-	// This could involve calling functions from other modules, like chatbot.gs or gemini_integration.gs
+
+  // Call chatbot to generate response
+  let response = chatbot.generateResponse(message);
+
+  // Check if the message is requesting Google services
+  if (chatbot.isGoogleServiceRequest(message)) {
+
+    // Call Google services module 
+    response = googleServices.handleGoogleRequest(message);
+
+  }
+
+  return response;
+
 }
 
-// Send a response to a chat space
+// Send response 
 function sendResponse(space, response) {
-	// TODO: Add your message sending logic here
-	// This could involve using the Google Chat API
+  
+  // Use Google Chat API
+  chatApi.messages.create({
+    space: space,
+    text: response    
+  });
+
 }
 
-// Access and store variables like GEMINI_PRO_API_KEY, Google API credentials, and settings
-const GEMINI_PRO_API_KEY = 'YOUR_GEMINI_API_KEY';
-const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY';
-
-// Initialize the Gemini API
-const gemini = new GeminiAPI( {
-	key: GEMINI_PRO_API_KEY
+// Initialize APIs
+const gemini = new GeminiAPI({
+  key: GEMINI_KEY 
 });
 
-// Initialize the Google API
-const googleApi = google.googleapis( {
-	version: 'v1', auth: GOOGLE_API_KEY
+const googleApi = new GoogleApi({
+  key: GOOGLE_KEY
 });
+
+// Pass APIs to modules
+chatbot.init(gemini);
+googleServices.init(googleApi);
