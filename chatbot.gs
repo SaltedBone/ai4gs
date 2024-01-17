@@ -1,19 +1,49 @@
-// chatbot.gs
-function onMessageReceived(event) {
-  var message = event.message.text;
-  var sender = event.user.displayName;
+// Load Gemini API client
+const gemini = require('gemini-api-client');
+
+async function generateResponse(message, sender) {
+
+  // Build prompt with sender context
+  const prompt = `${sender} said: ${message}`; 
   
-  // Process user inputs and generate responses using Gemini Pro
-  var response = generateResponse(message, sender);
+  try {
+    // Call Gemini API to generate response
+    const response = await gemini.generate(prompt);
+    
+    // Format response nicely
+    return `Here is my response: ${response}`;
+    
+  } catch (error) {
+    console.error('Error calling Gemini API', error);
+    return 'Sorry, I had trouble generating a response';  
+  }
+
+}
+
+async function onMessageReceived(event) {
+
+  // Extract message details  
+  const message = event.message.text;
+  const sender = event.user.displayName;
   
-  // Send the response back to the user
+  // Generate response
+  const response = await generateResponse(message, sender);
+
+  // Send response back to user
   sendResponse(response, event.space.name, event.message.thread.name);
+
 }
 
-function generateResponse(message, sender) {
-  // Your code here to generate a response based on the user's message
+function sendResponse(response, space, thread) {
+
+  // Send response back to user
+  // Using Google Chat API
+  chat.messages.create({
+    space: space,
+    thread: thread, 
+    text: response
+  });
+
 }
 
-function sendResponse(response, spaceName, threadName) {
-  // Your code here to send the response back to the user in the specified space and thread
 }
